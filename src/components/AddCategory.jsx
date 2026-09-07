@@ -1,35 +1,45 @@
-import { useState } from "react"
+import { useId, useState } from 'react'
 
 export const AddCategory = ({ onNewCategory }) => {
+  const [inputValue, setInputValue] = useState('')
+  const inputId = useId()
 
-    const [inputValue, setInputValue] = useState('')
+  const onInputChange = ({ target }) => {
+    setInputValue(target.value)
+  }
 
-    const onInputChange = ({ target }) => {
-        setInputValue(target.value)
-    }
+  const onSubmit = (event) => {
+    event.preventDefault()
 
-    const onSubmit = (event) => {
-        event.preventDefault();
-        if (inputValue.trim().length <= 1) return;
-        
-        //setCategories(categories => [inputValue, ...categories])
-        setInputValue('');
-        onNewCategory( inputValue.trim() )
+    const newCategory = inputValue.trim()
+    if (newCategory.length < 2) return
 
-    }
+    onNewCategory(newCategory)
+    setInputValue('')
+  }
 
-    return (
+  const isSubmitDisabled = inputValue.trim().length < 2
 
-        <form onSubmit={ onSubmit }>
+  return (
+    <form className="search-form" onSubmit={onSubmit} role="search">
+      <label className="sr-only" htmlFor={inputId}>
+        Buscar GIFs
+      </label>
 
-            <input
-                type="text"
-                placeholder="Buscar GIFs"
-                value={inputValue}
-                onChange={onInputChange}
-            />
+      <input
+        id={inputId}
+        name="gif-search"
+        type="search"
+        placeholder="Ej: Gatos, reacciones..."
+        value={inputValue}
+        onChange={onInputChange}
+        autoComplete="off"
+        enterKeyHint="search"
+      />
 
-        </form>
-
-    )
+      <button type="submit" disabled={isSubmitDisabled}>
+        Buscar
+      </button>
+    </form>
+  )
 }

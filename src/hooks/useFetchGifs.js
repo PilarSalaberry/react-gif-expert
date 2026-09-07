@@ -1,24 +1,49 @@
-import { useEffect, useState } from "react";
-import { getGifs } from "../helpers/getGifs";
+import { useCallback, useEffect, useState } from 'react'
+import { getGifs } from '../helpers/getGifs'
 
 export const useFetchGifs = (category) => {
+  const [requestId, setRequestId] = useState(0)
+  const [state, setState] = useState({
+    error: null,
+    images: [],
+    isLoading: true,
+  })
 
-    const [images, setImages] = useState([])
-    const [isLoading, setIsLoading] = useState(true)
+  useEffect(() => {
+    const controller = new AbortController()
 
-    const getImages = async () => {
-        const newImages = await getGifs(category);
-        setImages(newImages);
-        setIsLoading(false)
+    const loadImages = async () => {
+      setState((currentState) => ({
+        ...currentState,
+        error: null,
+        isLoading: true,
+      }))
+
+      try {
+        const images = await getGifs(category, { signal: controller.signal })
+        setState({ error: null, images, isLoading: false })
+      } catch (error) {
+        if (error.name === 'AbortError') return
+
+        setState({
+          error: error.message,
+          images: [],
+          isLoading: false,
+        })
+      }
     }
 
-    useEffect(() => {
-        getImages()
-    }, [])
+    loadImages()
 
-    return {
+    return () => controller.abort()
+  }, [category, requestId])
 
-        images,
-        isLoading
-    }
+  const retry = useCallback(() => {
+    setRequestId((currentId) => currentId + 1)
+  }, [])
+
+  return {
+    ...state,
+    retry,
+  }
 }

@@ -1,29 +1,37 @@
-import { useState } from 'react'
-import { AddCategory, GifGrid } from './components';
+import { useCallback, useState } from 'react'
+import { AddCategory, GifGrid } from './components'
 
 export const GifExpertApp = () => {
+  const [categories, setCategories] = useState(['Good morning'])
 
-    const [categories, setCategories] = useState(['Glee']);
+  const onAddCategory = useCallback((newCategory) => {
+    setCategories((currentCategories) => {
+      const categoryAlreadyExists = currentCategories.some(
+        (category) => category.toLocaleLowerCase() === newCategory.toLocaleLowerCase(),
+      )
 
-    const onAddCategory = (newCategory) => {
-        if (categories.includes(newCategory)) return
-        setCategories([newCategory, ...categories])
+      return categoryAlreadyExists
+        ? currentCategories
+        : [newCategory, ...currentCategories]
+    })
+  }, [])
 
-    }
+  return (
+    <main className="app-shell">
+      <header className="hero">
+        <h1>Buscá tu GIF</h1>
+        <p className="hero__description">
+          Encontrá el GIF perfecto para cada conversación.
+        </p>
 
-    return (
-        <>
-            <h1>GifExpertApp</h1>
+        <AddCategory onNewCategory={onAddCategory} />
+      </header>
 
-            <AddCategory
-                onNewCategory={value => onAddCategory(value)}
-            />
-            {categories.map(category => (
-                <GifGrid 
-                key={category}
-                category={category} />
-            ))
-            }
-        </>
-    )
+      <div className="results">
+        {categories.map((category) => (
+          <GifGrid key={category.toLocaleLowerCase()} category={category} />
+        ))}
+      </div>
+    </main>
+  )
 }

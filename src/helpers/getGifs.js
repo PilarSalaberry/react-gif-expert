@@ -1,15 +1,35 @@
-export const getGifs = async(category) => {
-    const url = `https://api.giphy.com/v1/gifs/search?api_key=5l3dOUXmkHIQSJlnbFHUXL1DmbI3skac&q=${category}&limit=10`
+const GIPHY_SEARCH_URL = 'https://api.giphy.com/v1/gifs/search'
 
-    const resp = await fetch(url)
-    const {data} = await resp.json()
+export const getGifs = async (category, { signal } = {}) => {
+  const apiKey = import.meta.env.VITE_GIPHY_API_KEY
 
-    const gifs = data.map( img => ({
-        id: img.id,
-        title: img.title,
-        url: img.images.downsized_medium.url
-    } ))
+  if (!apiKey) {
+    throw new Error('Falta configurar VITE_GIPHY_API_KEY.')
+  }
 
-    return gifs;
+  const params = new URLSearchParams({
+    api_key: apiKey,
+    limit: '12',
+    q: category,
+    rating: 'g',
+  })
 
+  const response = await fetch(`${GIPHY_SEARCH_URL}?${params}`, { signal })
+
+  if (!response.ok) {
+    throw new Error(`GIPHY respondió con el estado ${response.status}.`)
+  }
+
+  const { data } = await response.json()
+  if (!Array.isArray(data)) {
+    throw new Error('GIPHY devolvió una respuesta inesperada.')
+  }
+
+  return data
+    .map((image) => ({
+      id: image.id,
+      title: image.title,
+      url: image.images?.downsized_medium?.url,
+    }))
+    .filter((image) => image.id && image.url)
 }
